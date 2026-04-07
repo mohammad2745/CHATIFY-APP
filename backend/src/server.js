@@ -1,15 +1,14 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const cluster = require("cluster");
-const http = require("http");
-const numCPUs = require("os").cpus().length;
+import express from "express";
+import dotenv from "dotenv";
+import path from "path";
 
-const authRoutes = require("./routes/auth.routes");
-const messageRoutes = require("./routes/message.routes");
+import authRoutes from "./routes/auth.routes.js";
+import messageRoutes from "./routes/message.routes.js";
 
 dotenv.config();
 
 const app = express();
+const __dirname = path.resolve();
 
 const PORT = process.env.PORT || 3000;
 
@@ -18,25 +17,16 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-if (cluster.isMaster) {
-  console.log("Master process is running...");
+// make ready for deployment
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  // Optional: Restart worker if it crashes
-  cluster.on("exit", (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died. Restarting...`);
-    cluster.fork();
-  });
-} else {
-  app.get("/", (req, res) => {
-    res.send("Hello World from Express");
-  });
-
-  // Start server
-  app.listen(PORT, () => {
-    console.log(`Worker ${process.pid} listening on port ${PORT}`);
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
   });
 }
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Worker ${process.pid} listening on port ${PORT}`);
+});
