@@ -1,12 +1,10 @@
 import { sendWelcomeEmail } from "../emails/emailHandlers.js";
+import { ENV } from "../lib/env.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-export const authController = async (req, res) => {
+export const signup = async (req, res) => {
   const { fullname, email, password } = req.body;
 
   try {
@@ -48,15 +46,9 @@ export const authController = async (req, res) => {
       generateToken(newUser._id, res);
 
       res.status(201).json({ user: newUser });
-      console.log(
-        `Email sent to ${newUser.email} name ${newUser.fullname} client url ${process.env.CLIENT_URL}`,
-      );
+
       try {
-        await sendWelcomeEmail(
-          newUser.email,
-          newUser.fullname,
-          process.env.CLIENT_URL,
-        );
+        await sendWelcomeEmail(newUser.email, newUser.fullname, ENV.CLIENT_URL);
       } catch (error) {
         console.error("Error sending email:", error);
       }
@@ -67,4 +59,38 @@ export const authController = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Something went wrong." });
   }
+};
+
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    if (!email || !password) {
+      return res.status(400).json({ error: "Please fill all the fields." });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ error: "User does not exist." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid credentials." });
+    }
+
+    generateToken(user._id, res);
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong." });
+  }
+};
+
+export const logout = async (_, res) => {
+  res.cookie("jwt", "", { maxAge: 0 });
+  res.status(200).json({ message: "Logged out successfully." });
 };
