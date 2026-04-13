@@ -1,6 +1,10 @@
+import { sendWelcomeEmail } from "../emails/emailHandlers.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const authController = async (req, res) => {
   const { fullname, email, password } = req.body;
@@ -44,11 +48,21 @@ export const authController = async (req, res) => {
       generateToken(newUser._id, res);
 
       res.status(201).json({ user: newUser });
+      console.log(
+        `Email sent to ${newUser.email} name ${newUser.fullname} client url ${process.env.CLIENT_URL}`,
+      );
+      try {
+        await sendWelcomeEmail(
+          newUser.email,
+          newUser.fullname,
+          process.env.CLIENT_URL,
+        );
+      } catch (error) {
+        console.error("Error sending email:", error);
+      }
     } else {
       res.status(500).json({ error: "Something went wrong." });
     }
-
-    return res.status(201).json({ user: newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Something went wrong." });
