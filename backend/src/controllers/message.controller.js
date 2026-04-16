@@ -42,6 +42,16 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const { text, image } = req.body;
 
+    if (!image || !text) {
+      return res.status(400).json({ error: "Please fill all the fields." });
+    }
+
+    if (senderId === receiverId) {
+      return res
+        .status(400)
+        .json({ error: "You cannot send a message to yourself." });
+    }
+
     let imageURL;
     if (image) {
       const uploadResponse = await cloudinary.uploader.upload(image);
