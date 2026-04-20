@@ -19,7 +19,6 @@ function SignUpPage() {
   const { signup, isSigningUp } = useAuthStore();
 
   const handleSubmit = (e) => {
-    console.log("form data: ", formData);
     e.preventDefault();
     signup(formData);
   };
