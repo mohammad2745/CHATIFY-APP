@@ -17,7 +17,6 @@ function ProfileHeader() {
   const [selectedImg, setSelectedImg] = useState(null);
 
   const fileInputRef = useRef(null);
-  console.log("authUser", authUser.user.profilePic);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
