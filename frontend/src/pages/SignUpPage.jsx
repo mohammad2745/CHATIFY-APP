@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import BorderAnimatedContainer from "../components/BorderAnimated";
+import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
 import {
   MessageCircleIcon,
   LockIcon,
@@ -145,5 +145,4 @@ function SignUpPage() {
     </div>
   );
 }
-
 export default SignUpPage;
